@@ -327,6 +327,7 @@ function QueryDataFromTable(tableName, filter, context){
   
 }
 
+
 module.exports = {
   CreateTableIfNotExists,
   QueryDataByPartitionKeyAndRowKey,

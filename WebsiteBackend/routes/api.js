@@ -1,5 +1,6 @@
 const e = require('express');
 var express = require('express');
+const { GetTableName } = require('../../AzureFunctionApp3/SharedModules/AzureTableStorageFuncV2');
 var router = express.Router();
 var AzureFunction = require('../shared_modules/AzureTableStorageFuncWebsite');
 
@@ -10,6 +11,86 @@ router.get('/', function(req, res, next) {
 
 router.get('/test', async function(req, res, next) {
   let data = await AzureFunction.GetTableName('userList');
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
+router.get('/CheckUsernameExist', async function(req, res, next) {
+  let userData = { username: "isrosyaeful", password: "password123456" };
+  let data = await AzureFunction.CheckUsernameExist(userData,console);
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
+router.get('/ValidateUserCredential', async function(req, res, next) {
+  let userData = { username: "isrosyaeful", password: "password123456" };
+  let data = await AzureFunction.ValidateUserCredential(userData,console);
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
+router.get('/InsertNewUser', async function(req, res, next) {
+  let userData = {
+    username: "isrosyaeful2",
+    password: "password1234568",
+    fullName: "Isro Syaeful Iman 2",
+    role: "Administrator",
+  };
+  let data = await AzureFunction.InsertNewUser(userData,console);
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
+router.get('/UpdateUserInformation', async function(req, res, next) {
+  let userData = {
+    username: "isrosyaeful2",
+    // password: "password123",
+    fullName: "Isro Syaeful Iman Test 2",
+    role: "Administrator",
+  };
+  let data = await AzureFunction.UpdateUserInformation(userData,console);
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
+router.get('/GetTableItemsNumber', async function(req, res, next) {
+  let tableName = await GetTableName('userLocation');
+  let data = await AzureFunction.GetTableItemsNumber(tableName);
+  res.send(`{"body":${JSON.stringify(data)}}`);//{"totalItems":${(data.data.length)?data.data.length:0}}}`);//${JSON.stringify(data)},
+});
+
+router.get('/InsertNewUserLocation', async function(req, res, next) {
+  let locationData = {
+    username: "isrosyaeful2",
+    // password: "password123",
+    locationName:"Test Location 1",
+    locationAddress: "TestLocationAddress1",
+  };
+  let data = await AzureFunction.InsertNewUserLocation(locationData,console);
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
+router.get('/GetUserLocationList', async function(req, res, next) {
+  let userData = {
+    username: "isrosyaeful2"
+  };
+  let data = await AzureFunction.GetUserLocationList(userData,console);
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
+
+router.get('/UpdateUserLocationInformation', async function(req, res, next) {
+  let userData = {
+    username: "isrosyaeful2",
+    locationID:2,
+    locationName:"Test Location 2",
+    locationAddress: "TestLocationAddress2",
+  };
+  let data = await AzureFunction.UpdateUserLocationInformation(userData,console);
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
+router.get('/DeleteUserLocation', async function(req, res, next) {
+  let locationData = {
+    username: "isrosyaeful2",
+    locationID:2
+  };
+  let data = await AzureFunction.DeleteUserLocation(locationData,console);
   res.send(`{"body":${JSON.stringify(data)}}`);
 });
 

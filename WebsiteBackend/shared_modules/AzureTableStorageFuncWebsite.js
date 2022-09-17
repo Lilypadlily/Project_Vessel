@@ -57,6 +57,20 @@ function QueryDataByPartitionKey(tableName, partitionKey){
 }
 
 
+function GetTableItemsNumber(tableName){
+  return new Promise(resolve => {
+    var query = new tableStore.TableQuery(); 
+    tableClient.queryEntities(tableName, query, null, (error, result, resp) => {
+      if (error) {
+        // response.send(`Error Occured in table creation ${error.message}`);
+        resolve({ statusCode: 400,totalItems:0 });
+      } else {
+        resolve({ statusCode: 200, totalItems:resp.body.value.length});
+      }
+    });
+  });
+}
+
 //Get Customer Table name from Table Master by datetime
 function GetTableName( category, datetime){
   return new Promise(async(resolve) => {
@@ -224,15 +238,303 @@ function InsertDeviceConditionData(tableName, data) {
     }
   );
 }
+
+
+//USER MANAGEMENT SECTION
+function InsertNewUser(data,console){
+  return new Promise(async(resolve) => {
+    let tableName = await GetTableName('userList');
+    console.log(`InsertNewUser TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    let PartitionKey = String((data.username)?(data.username):''); 
+    let RowKey = '';
+    
+    let entity = {
+      PartitionKey: PartitionKey,
+      RowKey: RowKey,
+      // Username: (data.username)?(data.username):'',
+      Password: (data.password)?(data.password):'',
+      FullName: (data.fullName)?(data.fullName):'',
+      Role: (data.role)?(data.role):''
+    };
+    // context.log(`entity: ${JSON.stringify(entity)}`);
+
+    //check the user if exist
+    tableClient.retrieveEntity(tableName, PartitionKey, RowKey, (error, result, resp) => {
+
+      if (error) {
+        console.log(`[InsertNewUser] error retrieveEntity : ${error.message}`);
+        tableClient.insertEntity(tableName, entity, (errorInsert, resultInsert) => {
+            if (errorInsert) {
+              // console.log(`[InsertNewUser] ERROR insertEntity : ${error.message}`);
+              resolve({message : "User registration failed, please contact your administrator"});
+            } else {
+              // console.log(`[InsertNewUser] new data has been successfuly inserted : ${JSON.stringify(resultInsert)}`);
+              // resolve(resultInsert);
+              resolve({message : "User has been registered successfully!"});
+            }
+        });
+      } else {
+        // console.log(`[UpdateCustomerDurationData] Entity found : ${JSON.stringify(resp.body)}`);
+        resolve({message:'user already exist!'});
+      }
+    });
+
+  });
+}
+
+
+function UpdateUserInformation(data,console){
+  return new Promise(async(resolve) => {
+    let tableName = await GetTableName('userList');
+    // console.log(`UpdateUserInformation TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    let PartitionKey = String((data.username)?(data.username):''); 
+    let RowKey = '';
+    
+    let entity = {
+      PartitionKey: PartitionKey,
+      RowKey: RowKey,
+      // Username: (data.username)?(data.username):'',
+      // Password: (data.password)?(data.password):'',
+      FullName: (data.fullName)?(data.fullName):'',
+      Role: (data.role)?(data.role):''
+    };
+    // context.log(`entity: ${JSON.stringify(entity)}`);
+
+    //check the user if exist
+    tableClient.retrieveEntity(tableName, PartitionKey, RowKey, (error, result, resp) => {
+
+      if (error) {
+        console.log(`[UpdateUserInformation] error retrieveEntity : ${error.message}`);
+        resolve({message : "User not found!"});
+      } else {
+        entity.Password=(data.password)?(data.password):resp.body.Password;
+        tableClient.replaceEntity(tableName, entity, (errorUpdate, resultUpdate) => {
+          if (error) {
+              context.log(`[UpdateUserInformation] Error Occured during entity update ${errorUpdate.message}`);
+              resolve(errorUpdate.message);
+          } else {
+              // context.log(`[UpdateUserInformation] data has been successfuly updated: ${JSON.stringify(resultUpdate)}`);
+              resolve(resultUpdate);
+          }
+        });
+        resolve({message:'User information have been updated successfully!'});
+      }
+    });
+
+  });
+}
+
+function CheckUsernameExist(data,console){
+  return new Promise(async(resolve) => {
+    let tableName = await GetTableName('userList');
+    // console.log(`InsertNewUser TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    let PartitionKey = String((data.username));
+    
+    let RowKey = '';
+    
+    let credentialValid = 0;
+
+    tableClient.retrieveEntity(tableName, PartitionKey, RowKey, (error, result, resp) => {
+
+      if (error) {
+        console.log(`[UpdateCustomerDurationData] error retrieveEntity : ${error.message}`);
+        resolve({credentialValid:credentialValid});
+      } else {
+        // console.log(`[UpdateCustomerDurationData] Entity found : ${JSON.stringify(resp.body)}`);
+        if (data.password===resp.body.Password){
+          credentialValid = 1;
+        }
+        
+        resolve({credentialValid:credentialValid});
+      }
+    });
+
+  });
+}
+
+
+function ValidateUserCredential(data,console){
+  return new Promise(async(resolve) => {
+    let tableName = await GetTableName('userList');
+    // console.log(`InsertNewUser TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    let PartitionKey = String((data.username));
+    let RowKey = '';
+
+    let credentialValid = 0;
+
+    tableClient.retrieveEntity(tableName, PartitionKey, RowKey, (error, result, resp) => {
+
+      if (error) {
+        console.log(`[UpdateCustomerDurationData] error retrieveEntity : ${error.message}`);
+        resolve({credentialValid:credentialValid,username:data.username});
+      } else {
+        // console.log(`[UpdateCustomerDurationData] Entity found : ${JSON.stringify(resp.body)}`);
+        if (data.password===resp.body.Password){
+          credentialValid = 1;
+        }
+        
+        resolve({credentialValid:credentialValid,username:data.username});
+      }
+    });
+
+  });
+}
+
+//LOCATION MANAGEMENT SECTION
+
+function GetUserLocationList(data,console){
+  return new Promise(async(resolve) => {
+    let tableName = await GetTableName('userLocation');
+    // console.log(`InsertNewUser TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    let totalItems = (await GetTableItemsNumber(tableName)).totalItems+1;
+    let PartitionKey = String((data.username)?(data.username):''); 
+    let RowKey = (totalItems)?String(totalItems):'';
+    let result = await QueryDataByPartitionKey(tableName,PartitionKey);
+    resolve(result.data);
+  });
+}
+
+function InsertNewUserLocation(data,console){
+  return new Promise(async(resolve) => {
+    let tableName = await GetTableName('userLocation');
+    // console.log(`InsertNewUser TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    let totalItems = (await GetTableItemsNumber(tableName)).totalItems+1;
+    let PartitionKey = String((data.username)?(data.username):''); 
+    let RowKey = (totalItems)?String(totalItems):'';
+    
+    let entity = {
+      PartitionKey: PartitionKey,
+      RowKey: RowKey,
+      // Username: (data.username)?(data.username):'',
+      LocationID: (totalItems)?(totalItems):'',
+      LocationName: (data.locationName)?(data.locationName):'',
+      IsActive:true,
+      LocationAddress: (data.locationAddress)?(data.locationAddress):'',
+    };
+    // context.log(`entity: ${JSON.stringify(entity)}`);
+
+    tableClient.insertEntity(tableName, entity, (errorInsert, resultInsert) => {
+      if (errorInsert) {
+        // console.log(`[InsertNewUser] ERROR insertEntity : ${error.message}`);
+        resolve({message : "Location registration failed, please contact your administrator"});
+      } else {
+        // console.log(`[InsertNewUser] new data has been successfuly inserted : ${JSON.stringify(resultInsert)}`);
+        // resolve(resultInsert);
+        resolve({message : "Location has been registered successfully!"});
+      }
+  });
+
+  });
+}
+
+
+function UpdateUserLocationInformation(data,console){
+  return new Promise(async(resolve) => {
+    let tableName = await GetTableName('userLocation');
+    console.log(`UpdateUserLocationInformation TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    let PartitionKey = String((data.username)?(data.username):''); 
+    let RowKey = String(data.locationID);
+    
+    let entity = {
+      PartitionKey: PartitionKey,
+      RowKey: RowKey,
+      // Username: (data.username)?(data.username):'',
+      // Password: (data.password)?(data.password):'',
+      LocationID: (data.locationID)?(data.locationID):'',
+      LocationName: (data.locationName)?(data.locationName):'',
+      IsActive:true,
+      LocationAddress: (data.locationAddress)?(data.locationAddress):'',
+    };
+    // console.log(`UpdateUserLocationInformation TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+
+    console.log(`entity: ${JSON.stringify(entity)}`);
+
+    //check the user if exist
+    tableClient.retrieveEntity(tableName, PartitionKey, RowKey, (error, result, resp) => {
+
+      if (error) {
+        console.log(`[UpdateUserLocationInformation] error retrieve Entity : ${error.message}`);
+        resolve({message : "User Location not found!"});
+      } else {
+        tableClient.replaceEntity(tableName, entity, (errorUpdate, resultUpdate) => {
+          if (error) {
+              context.log(`[UpdateUserLocationInformation] Error Occured during entity update ${errorUpdate.message}`);
+              resolve(errorUpdate.message);
+          } else {
+              // context.log(`[UpdateUserInformation] data has been successfuly updated: ${JSON.stringify(resultUpdate)}`);
+              resolve(resultUpdate);
+          }
+        });
+        resolve({message:'User Location information have been updated successfully!'});
+      }
+    });
+
+  });
+}
+
+
+function DeleteUserLocation(data,console){
+  return new Promise(async(resolve) => {
+    let tableName = await GetTableName('userLocation');
+    console.log(`UpdateUserLocationInformation TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    let PartitionKey = String((data.username)?(data.username):''); 
+    let RowKey = String(data.locationID);
+    
+
+    //check the location if exist
+    tableClient.retrieveEntity(tableName, PartitionKey, RowKey, (error, result, resp) => {
+
+      if (error) {
+        console.log(`[UpdateUserLocationInformation] error retrieve Entity : ${error.message}`);
+        resolve({message : "User Location not found!"});
+      } else {
+        
+        let entity = {
+          PartitionKey: PartitionKey,
+          RowKey: RowKey,
+          // Username: (data.username)?(data.username):'',
+          // Password: (data.password)?(data.password):'',
+          LocationID: (resp.body.LocationID),
+          LocationName: (resp.body.LocationName),
+          IsActive:false,
+          LocationAddress: (resp.body.LocationAddress)
+        };
+        tableClient.replaceEntity(tableName, entity, (errorUpdate, resultUpdate) => {
+          if (error) {
+              context.log(`[UpdateUserLocationInformation] Error Occured during entity update ${errorUpdate.message}`);
+              resolve(errorUpdate.message);
+          } else {
+              // context.log(`[UpdateUserInformation] data has been successfuly updated: ${JSON.stringify(resultUpdate)}`);
+              resolve(resultUpdate);
+          }
+        });
+        resolve({message:'User Location information have been removed successfully!'});
+      }
+    });
+
+  });
+}
+
+
+
 module.exports = {
   CreateTableIfNotExists,
   QueryDataByPartitionKeyAndRowKey,
   QueryDataByPartitionKey,
+  GetTableItemsNumber,
   GetTableName,
   GetCustomerDurationTable,
   GetDeviceLocationByDeviceId,
   QueryDataByDate,
   QueryDataFromTable,
   // GetCurrentDashBoardDataByUsername,
-  InsertDeviceConditionData
+  InsertDeviceConditionData,
+  InsertNewUser,
+  UpdateUserInformation,
+  CheckUsernameExist,
+  ValidateUserCredential,
+  GetUserLocationList,
+  InsertNewUserLocation,
+  UpdateUserLocationInformation,
+  DeleteUserLocation
 }
