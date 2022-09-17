@@ -476,44 +476,119 @@ function UpdateUserLocationInformation(data,console){
 function DeleteUserLocation(data,console){
   return new Promise(async(resolve) => {
     let tableName = await GetTableName('userLocation');
-    console.log(`UpdateUserLocationInformation TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    // console.log(`DeleteUserLocation TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
     let PartitionKey = String((data.username)?(data.username):''); 
     let RowKey = String(data.locationID);
     
-
-    //check the location if exist
-    tableClient.retrieveEntity(tableName, PartitionKey, RowKey, (error, result, resp) => {
+    let entityDesc = {
+      PartitionKey:PartitionKey, 
+      RowKey:RowKey
+    }
+    tableClient.deleteEntity(tableName, entityDesc, (error, result, resp) => {
 
       if (error) {
-        console.log(`[UpdateUserLocationInformation] error retrieve Entity : ${error.message}`);
-        resolve({message : "User Location not found!"});
+        console.log(`[DeleteUserLocation] error delete Entity : ${error.message}`);
+        resolve({message : "Failed to remove User Location assignment!"});
       } else {
+        resolve({message:'User Location assignment have been removed successfully!'});
+      }
+    });
+
+
+    
+    // //check the location if exist
+    // tableClient.retrieveEntity(tableName, PartitionKey, RowKey, (error, result, resp) => {
+
+    //   if (error) {
+    //     console.log(`[UpdateUserLocationInformation] error retrieve Entity : ${error.message}`);
+    //     resolve({message : "User Location not found!"});
+    //   } else {
         
-        let entity = {
-          PartitionKey: PartitionKey,
-          RowKey: RowKey,
-          // Username: (data.username)?(data.username):'',
-          // Password: (data.password)?(data.password):'',
-          LocationID: (resp.body.LocationID),
-          LocationName: (resp.body.LocationName),
-          IsActive:false,
-          LocationAddress: (resp.body.LocationAddress)
-        };
-        tableClient.replaceEntity(tableName, entity, (errorUpdate, resultUpdate) => {
-          if (error) {
-              context.log(`[UpdateUserLocationInformation] Error Occured during entity update ${errorUpdate.message}`);
-              resolve(errorUpdate.message);
-          } else {
-              // context.log(`[UpdateUserInformation] data has been successfuly updated: ${JSON.stringify(resultUpdate)}`);
-              resolve(resultUpdate);
-          }
-        });
-        resolve({message:'User Location information have been removed successfully!'});
+    //     let entity = {
+    //       PartitionKey: PartitionKey,
+    //       RowKey: RowKey,
+    //       // Username: (data.username)?(data.username):'',
+    //       // Password: (data.password)?(data.password):'',
+    //       LocationID: (resp.body.LocationID),
+    //       LocationName: (resp.body.LocationName),
+    //       IsActive:false,
+    //       LocationAddress: (resp.body.LocationAddress)
+    //     };
+    //     tableClient.replaceEntity(tableName, entity, (errorUpdate, resultUpdate) => {
+    //       if (error) {
+    //           context.log(`[UpdateUserLocationInformation] Error Occured during entity update ${errorUpdate.message}`);
+    //           resolve(errorUpdate.message);
+    //       } else {
+    //           // context.log(`[UpdateUserInformation] data has been successfuly updated: ${JSON.stringify(resultUpdate)}`);
+    //           resolve(resultUpdate);
+    //       }
+    //     });
+    //     resolve({message:'User Location information have been removed successfully!'});
+    //   }
+    // });
+
+  });
+}
+
+
+
+function InsertNewDevice(data,console){
+  return new Promise(async(resolve) => {
+    let tableName = await GetTableName('deviceManagement');
+    // console.log(`InsertNewUser TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    let PartitionKey = String((data.deviceID)?(data.deviceID):''); 
+    let RowKey = 'assignment';
+    
+    let entity = {
+      PartitionKey: PartitionKey,
+      RowKey: RowKey,
+      // Username: (data.username)?(data.username):'',
+      LocationID: (data.locationID)?(data.locationID):'',
+      LocationName: (data.locationName)?(data.locationName):'',
+      IsActive:true,
+      IoTHubName:'AlwanDevice',
+      DeviceID:(data.deviceID)?(data.deviceID):''
+    };
+    // context.log(`entity: ${JSON.stringify(entity)}`);
+
+    tableClient.insertEntity(tableName, entity, (errorInsert, resultInsert) => {
+      if (errorInsert) {
+        // console.log(`[InsertNewUser] ERROR insertEntity : ${error.message}`);
+        resolve({message : "Device registration failed, please contact your administrator"});
+      } else {
+        // console.log(`[InsertNewUser] new data has been successfuly inserted : ${JSON.stringify(resultInsert)}`);
+        // resolve(resultInsert);
+        resolve({message : "Device has been registered successfully!"});
+      }
+  });
+
+  });
+}
+
+
+function DeleteDevice(data,console){
+  return new Promise(async(resolve) => {
+    let tableName = await GetTableName('deviceManagement');
+    console.log(`UpdateUserLocationInformation TableName ${tableName} /n DATA: ${JSON.stringify(data)}`);
+    let PartitionKey = String((data.deviceID)?(data.deviceID):''); 
+    let entityDesc = {
+      PartitionKey:PartitionKey, 
+      RowKey:'assignment'
+    }
+    tableClient.deleteEntity(tableName, entityDesc, (error, result, resp) => {
+
+      if (error) {
+        console.log(`[DeleteDevice] error delete Entity : ${error.message}`);
+        resolve({message : "Failed to remove device assignment!"});
+      } else {
+        resolve({message:'Device assignment have been removed successfully!'});
       }
     });
 
   });
 }
+
+
 
 
 
@@ -536,5 +611,7 @@ module.exports = {
   GetUserLocationList,
   InsertNewUserLocation,
   UpdateUserLocationInformation,
-  DeleteUserLocation
+  DeleteUserLocation,
+  InsertNewDevice,
+  DeleteDevice
 }

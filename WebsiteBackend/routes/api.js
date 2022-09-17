@@ -94,6 +94,25 @@ router.get('/DeleteUserLocation', async function(req, res, next) {
   res.send(`{"body":${JSON.stringify(data)}}`);
 });
 
+router.get('/InsertNewDevice', async function(req, res, next) {
+  let deviceData = {
+    deviceID: "111222333",
+    locationID:2,
+    locationName: "Location Testing 2"
+  };
+  let data = await AzureFunction.InsertNewDevice(deviceData,console);
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
+router.get('/DeleteDevice', async function(req, res, next) {
+  let deviceData = {
+    deviceID: "111222333",
+    locationID:2
+  };
+  let data = await AzureFunction.DeleteDevice(deviceData,console);
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
 router.get('/test2', async function(req, res, next) {
   let username='isrosyaeful';
   let today = new Date();//new Date(2022,3,3);
