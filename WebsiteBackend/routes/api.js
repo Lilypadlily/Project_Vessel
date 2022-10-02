@@ -27,23 +27,30 @@ router.get('/ValidateUserCredential', async function(req, res, next) {
 });
 
 router.get('/InsertNewUser', async function(req, res, next) {
-  let userData = {
-    username: "isrosyaeful2",
-    password: "password1234568",
-    fullName: "Isro Syaeful Iman 2",
-    role: "Administrator",
-  };
+  // format req.body 
+  // {
+  //   username: "isrosyaeful2",
+  //   password: "password1234568",
+  //   fullName: "Isro Syaeful Iman 2",
+  //   role: "Administrator",
+  // };
+  let userData = {};
+  userData = req.body;
   let data = await AzureFunction.InsertNewUser(userData,console);
   res.send(`{"body":${JSON.stringify(data)}}`);
 });
 
 router.get('/UpdateUserInformation', async function(req, res, next) {
-  let userData = {
-    username: "isrosyaeful2",
-    // password: "password123",
-    fullName: "Isro Syaeful Iman Test 2",
-    role: "Administrator",
-  };
+  // format req.body 
+  // {
+  //   username: "isrosyaeful2",
+  //   // password: "password123",
+  //   fullName: "Isro Syaeful Iman Test 2",
+  //   role: "Administrator",
+  // };
+  let userData = {};
+ 
+  userData = req.body;
   let data = await AzureFunction.UpdateUserInformation(userData,console);
   res.send(`{"body":${JSON.stringify(data)}}`);
 });
@@ -66,9 +73,12 @@ router.get('/InsertNewUserLocation', async function(req, res, next) {
 });
 
 router.get('/GetUserLocationList', async function(req, res, next) {
+  //format req.body
   let userData = {
-    username: "isrosyaeful2"
+    username: "isrosyaeful"
   };
+  // console.log(JSON.stringify(req.body));
+  userData = req.body;
   let data = await AzureFunction.GetUserLocationList(userData,console);
   res.send(`{"body":${JSON.stringify(data)}}`);
 });
@@ -221,8 +231,74 @@ router.get("/DeviceConnectivity", async function (req, res, next) {
   }
   
   
+  
+  
   res.send(result);
 });
+
+router.get('/TestAPI', async function(req, res, next) {
+  let userData = req.body
+  // console.log(JSON.stringify(req));
+  let data = await AzureFunction.GetUserLocationList(userData,console);
+
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
+
+
+
+
+
+///////////////////
+///REQUESTED API///
+///////////////////
+
+router.get('/GetUserBranchDetails', async function(req, res, next) {
+  //format req.body
+  // {"UserID":"isrosyaeful"}
+  let userData = {
+    username: req.body.userID
+  };
+  // console.log(JSON.stringify(req.body));
+  // userData = req.body;
+  let data = await AzureFunction.GetUserLocationList(userData,console);
+  // res.send(`{"body":${JSON.stringify(data)}}`);
+  res.json({"data":(data)});
+  res.end();
+});
+
+router.get('/AddNewDevice', async function(req, res, next) {
+  let deviceData = {
+    deviceID: req.body.deviceID,//"111222333",
+    locationID: req.body.locationID, //2,
+    locationName: req.body.locationName //"Location 2"
+  };
+  let data = await AzureFunction.InsertNewDevice(deviceData,console);
+  // res.send(`{"body":${JSON.stringify(data)}}`);
+  res.json(data)
+});
+
+router.get('/AddNewBranch', async function(req, res, next) {
+  let locationData = {
+    username: req.body.userID,//"isrosyaeful2",
+    locationName: req.body.locationName,//"Test Location 1",
+    locationAddress: req.body.locationAddress,//"TestLocationAddress1",
+  };
+  let data = await AzureFunction.InsertNewUserLocation(locationData,console);
+  // res.send(`{"body":${JSON.stringify(data)}}`);
+  res.json(data);
+});
+
+router.get('/DeleteUserBranch', async function(req, res, next) {
+  let locationData = {
+    username: req.body.userID,// "isrosyaeful2",
+    locationID: req.body.locationID,//2
+  };
+  let data = await AzureFunction.DeleteUserLocation(locationData,console);
+  // res.send(`{"body":${JSON.stringify(data)}}`);
+  res.json(data);
+});
+
+
 
 module.exports = router; 
 
