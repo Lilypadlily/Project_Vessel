@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import {
   CAvatar,
@@ -48,11 +48,41 @@ import {
 import WidgetsBrand from '../widgets/WidgetsBrand'
 import WidgetsDropdown from '../widgets/WidgetsDropdown'
 
+
+import axios from 'axios';
+// import {weeklyData, dashboardSummaryData} from '../data/dashboardData';
+
+// REF: https://stackoverflow.com/questions/68670660/react-call-api-and-export-value
+
+
 const Dashboard = () => {
-  const random = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
+  const random = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
+
+  const [labels, setLabels] = React.useState(null);
+  const [data, setData] = React.useState(null);
+
+  React.useEffect(() => {
+    axios.get("http://localhost:3000/api/GetTotalCustomer").then((res) => {
+    let rawData = res.data;
+    let labelsArr = [];
+    let dataArr = [];
+    rawData.forEach((item) => {
+      labelsArr.push(item.formattedDate);
+      dataArr.push(item.total);
+    })
+    setLabels(labelsArr);
+    setData(dataArr);
+    });
+  }, []);
+
+  if (!labels) return 'Loading...';
+  if (!data) return 'Loading...';
 
   return (
     <>
+    <div>
+      {/* <h1>{post}</h1> */}
+    </div>
       <WidgetsDropdown />
       <CRow>
         <CCol sm={5}>
@@ -82,23 +112,16 @@ const Dashboard = () => {
       <CChartLine
         style={{ height: '200px', marginTop: '20px' }}
         data={{
-          labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+          // labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+          labels: labels,
           datasets: [
             {
-              label: 'My Second dataset',
+              label: 'Total Customer',
               backgroundColor: 'transparent',
               borderColor: getStyle('--cui-dark'),
               pointHoverBackgroundColor: getStyle('--cui-dark'),
               borderWidth: 1,
-              data: [
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-              ],
+              data: data,
             },
           ],
         }}

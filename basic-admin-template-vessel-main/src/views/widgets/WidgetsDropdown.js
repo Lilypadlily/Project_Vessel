@@ -14,7 +14,25 @@ import { CChartBar, CChartLine } from '@coreui/react-chartjs'
 import CIcon from '@coreui/icons-react'
 import { cilArrowBottom, cilArrowTop, cilCast, cilDevices, cilOptions, cilUser } from '@coreui/icons'
 
+import axios from 'axios';
+
+
 const WidgetsDropdown = () => {
+  const [post, setPost] = React.useState(null);
+
+  React.useEffect(() => {
+    axios.get("http://localhost:3000/api/GetDashboardData").then((res) => {
+    setPost(res.data);
+    });
+  }, []);
+
+   if (!post) return 'Loading...';
+
+  const todayCustomer = post.todayCustomer;
+  const weeklyCustomer = post.weeklyCustomer;
+  const totalDevice = post.totalDevice;
+  const connectedDevice = post.connectedDevice;
+
   return (
     <CRow>
       <CCol m={5} lg={3}>
@@ -55,7 +73,7 @@ const WidgetsDropdown = () => {
           }
           style={{ '--cui-card-cap-bg': '#3b5998' }}
           values={[
-            { title: 'Hari Ini', value: '15' },
+            { title: 'Hari Ini', value: (todayCustomer) },
             //{ title: 'feeds', value: '459' },//
           ]}
         />
@@ -99,7 +117,7 @@ const WidgetsDropdown = () => {
           }
           style={{ '--cui-card-cap-bg': '#3b5998' }}
           values={[
-            { title: 'Minggu Ini', value: '80' },
+            { title: 'Minggu Ini', value: weeklyCustomer},
           ]}
         />
       </CCol>
@@ -142,7 +160,7 @@ const WidgetsDropdown = () => {
           }
           style={{ '--cui-card-cap-bg': '#3b5998' }}
           values={[
-            { title: 'Perangkat Terhubung', value: '12' },
+            { title: 'Perangkat Terhubung', value: connectedDevice},
           ]}
         />
       </CCol>
@@ -185,7 +203,7 @@ const WidgetsDropdown = () => {
           }
           style={{ '--cui-card-cap-bg': '#3b5998' }}
           values={[
-            { title: 'Total Perangkat', value: '20' },
+            { title: 'Total Perangkat', value: totalDevice },
           ]}
         />
       </CCol> 
