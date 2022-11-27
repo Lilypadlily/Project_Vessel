@@ -15,7 +15,9 @@ router.get('/test', async function(req, res, next) {
 });
 
 router.get('/CheckUsernameExist', async function(req, res, next) {
-  let userData = { username: "isrosyaeful", password: "password123456" };
+  // console.log(req.body);
+  // let userData = { username: "isrosyaeful", password: "password123456" };
+  userData = req.body;
   let data = await AzureFunction.CheckUsernameExist(userData,console);
   res.send(`{"body":${JSON.stringify(data)}}`);
 });
@@ -192,8 +194,9 @@ router.get('/test2', async function(req, res, next) {
 );
 
 router.get('/GetTotalCustomer', async function(req, res, next) {
-  let username='isrosyaeful';
+  // let username='isrosyaeful';
   let today = new Date(2022,3,3);
+  // let today = new Date();
   let firstDayOfTheWeek = new Date(today.getFullYear(),today.getMonth(),today.getDate()-today.getDay()); //start from sunday
   let lastDayOfTheWeek = new Date(today.getFullYear(),today.getMonth(),today.getDate()-today.getDay()+7);
   let startTime = new Date(today.getFullYear(),today.getMonth(),1,0,0,0);
@@ -205,45 +208,53 @@ router.get('/GetTotalCustomer', async function(req, res, next) {
   let filter = "EndTime ge '"+firstDayOfTheWeek.toISOString()+"' and EndTime le '"+lastDayOfTheWeek.toISOString()+"' ";
   let customerTable = await AzureFunction.GetTableName('customerDuration',today);
   let data = await AzureFunction.QueryDataFromTable(customerTable,filter);
-
+  // console.log(data);
+  let resultData =[];
   let hash = {};
 
-  for (let j = firstDayOfTheWeek; j < lastDayOfTheWeek; j.setDate(j.getDate()+1)){
-  // for (let j = startTime; j < endTime; j.setDate(j.getDate()+1)){
-    for (let i = 0; i < data.length; i++){
-      // initiate hash
-      if (!hash[new Date(j)]){
-        hash[new Date(j)] = 0;
+  if (data.length !== 0) {
+    console.log(data.length)
+    for (let j = firstDayOfTheWeek; j < lastDayOfTheWeek; j.setDate(j.getDate()+1)){
+      // for (let j = startTime; j < endTime; j.setDate(j.getDate()+1)){
+        for (let i = 0; i < data.length; i++){
+          // initiate hash
+          if (!hash[new Date(j)]){
+            hash[new Date(j)] = 0;
+          }
+          //  console.log('start = ' + new Date(j));
+          //  console.log(new Date(data[i].Timestamp));
+          // console.log('end = ' + new Date(j.getFullYear(),j.getMonth(),j.getDate()+1));
+          if ((new Date(data[i].Timestamp) > new Date(j)) && (new Date(data[i].Timestamp) < new Date(j.getFullYear(),j.getMonth(),j.getDate()+1))) {
+            // console.log('items.data[i].Timestamp: ' + new Date(data[i].Timestamp) + ' > ' + j);
+            // if (resultData[new Date(j)] == 0) { //check whether hash exists
+            //   resultData[new Date(j)] = 1; //initial sum
+            // } 
+            // else {
+            //   resultData[new Date(j)]++; 
+            // }
+            hash[new Date(j)]++; 
+          } 
+        }
       }
-      //  console.log('start = ' + new Date(j));
-      //  console.log(new Date(data[i].Timestamp));
-      // console.log('end = ' + new Date(j.getFullYear(),j.getMonth(),j.getDate()+1));
-      if ((new Date(data[i].Timestamp) > new Date(j)) && (new Date(data[i].Timestamp) < new Date(j.getFullYear(),j.getMonth(),j.getDate()+1))) {
-        // console.log('items.data[i].Timestamp: ' + new Date(data[i].Timestamp) + ' > ' + j);
-        // if (resultData[new Date(j)] == 0) { //check whether hash exists
-        //   resultData[new Date(j)] = 1; //initial sum
-        // } 
-        // else {
-        //   resultData[new Date(j)]++; 
-        // }
-        hash[new Date(j)]++; 
-      } 
+      resultData = Object.keys(hash).map((date) => {
+        formattedDate = (new Date(date)).toDateString();
+        return {
+          formattedDate,
+          total: hash[date]
+        }
+      })
+  } else { /** if no data */
+    for (let j = firstDayOfTheWeek; j < lastDayOfTheWeek; j.setDate(j.getDate()+1)){
+      formattedDate = (new Date(j)).toDateString();
+      resultData.push({
+        formattedDate,
+        total: 0
+      })
     }
   }
 
-  resultData = Object.keys(hash).map((date) => {
-    formattedDate = (new Date(date)).toDateString();
-    return {
-      formattedDate,
-      total: hash[date]
-    }
-  })
-// let result = { 
-//   'resultData': resultData,
-//   'hashed': hash,
-//   'data': data};
 let result = resultData;
-console.log(resultData[0].date);
+// console.log(resultData[0].date);
 res.send(result);
 
 });
@@ -417,6 +428,13 @@ router.get('/DeleteUserBranch', async function(req, res, next) {
   res.json(data);
 });
 
+router.post('/CheckUsernameExist', async function(req, res, next) {
+  // let userData = { username: "isrosyaeful", password: "password123456" };
+  userData = req.body.data;
+  console.log(userData);
+  let data = await AzureFunction.CheckUsernameExist(userData,console);
+  res.send(`{"body":${JSON.stringify(data)}}`);
+});
 
 
 module.exports = router; 
