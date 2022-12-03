@@ -127,7 +127,7 @@ router.get('/DeleteDevice', async function(req, res, next) {
 
 router.get('/test2', async function(req, res, next) {
   let username='isrosyaeful';
-  let today = new Date()//new Date(2022,3,3);
+  let today = new Date(2022,3,3);
   let todayConnection = new Date(Number(today)-1000*60*10); //today - 10 minutes
   let nextDay = new Date(today.getFullYear(),today.getMonth(),today.getDate()+1);
   let firstDayOfTheWeek = new Date(today.getFullYear(),today.getMonth(),today.getDate()-today.getDay());
@@ -257,6 +257,59 @@ let result = resultData;
 // console.log(resultData[0].date);
 res.send(result);
 
+});
+
+router.get('/GetCustomerDuration', async function(req, res, next) {
+  let today = new Date(2022,3,3);
+  // let today = new Date();
+  let firstDayOfTheWeek = new Date(today.getFullYear(),today.getMonth(),today.getDate()-today.getDay()); //start from sunday
+  let lastDayOfTheWeek = new Date(today.getFullYear(),today.getMonth(),today.getDate()-today.getDay()+7);
+  // let startTime = new Date(today.getFullYear(),today.getMonth(),1,0,0,0);
+  // let endTime = new Date(today.getFullYear(),today.getMonth()+1,1,0,0,0); //cari hari pertama weekly
+
+  let filter = "EndTime ge '"+firstDayOfTheWeek.toISOString()+"' and EndTime le '"+lastDayOfTheWeek.toISOString()+"' ";
+  let customerTable = await AzureFunction.GetTableName('customerDuration',today);
+  let data = await AzureFunction.QueryDataFromTable(customerTable,filter);
+  // console.log(data);
+  let resultData =[];
+  let hash = {};
+
+  if (data.length !== 0) {
+    console.log(data.length)
+    for (let j = firstDayOfTheWeek; j < lastDayOfTheWeek; j.setDate(j.getDate()+1)){
+        for (let i = 0; i < data.length; i++){
+          // console.log(data[i].Duration);
+          // initiate hash for duration
+          if (!hash[new Date(j)]){
+            hash[new Date(j)] = 0;
+          }
+          if ((new Date(data[i].Timestamp) > new Date(j)) && (new Date(data[i].Timestamp) < new Date(j.getFullYear(),j.getMonth(),j.getDate()+1))) {
+            hash[new Date(j)] = hash[new Date(j)] + data[i].Duration; 
+            // console.log(hash[new Date(j)]);
+            // console.log(data[i].RowKey);
+          } 
+        }
+      }
+      resultData = Object.keys(hash).map((date) => {
+        formattedDate = (new Date(date)).toDateString();
+        return {
+          formattedDate,
+          totalDuration: hash[date]
+        }
+      })
+  } else { /** if no data */
+    for (let j = firstDayOfTheWeek; j < lastDayOfTheWeek; j.setDate(j.getDate()+1)){
+      formattedDate = (new Date(j)).toDateString();
+      resultData.push({
+        formattedDate,
+        totalDuration: 0
+      })
+    }
+  }
+
+let result = resultData;
+// console.log(resultData[0].date);
+res.send(result);
 });
 
 router.get('/GetDashboardData', async function(req, res, next) {
