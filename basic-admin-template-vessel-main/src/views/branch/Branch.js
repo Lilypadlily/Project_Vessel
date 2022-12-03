@@ -48,8 +48,48 @@ import {
 
 import WidgetsDropdown2 from '../widgets/WidgetsDropdown2'
 
+import axios from 'axios';
+
 const Branch = () => {
   const random = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
+
+  const [labels1, setLabels1] = React.useState(null);
+  const [labels2, setLabels2] = React.useState(null);
+  const [durationData, setDurationData] = React.useState(null);
+  const [totalCustomerData, setTotalCustomerData] = React.useState(null);
+
+  React.useEffect(() => {
+    axios.get("http://localhost:3000/api/GetTotalCustomer").then((res) => {
+      console.log(res);
+    let rawCustomerData = res.data;
+    let labels1Arr = [];
+    let customerDataArr = [];
+    rawCustomerData.forEach((item) => {
+      labels1Arr.push(item.formattedDate);
+      customerDataArr.push(item.total);
+    })
+    setLabels1(labels1Arr);
+    setTotalCustomerData(customerDataArr);
+    });
+
+    axios.get("http://localhost:3000/api/GetCustomerDuration").then((res) => {
+    let rawDurationData = res.data;
+    let labels2Arr = [];
+    let durationDataArr = [];
+    rawDurationData.forEach((item) => {
+      labels2Arr.push(item.formattedDate);
+      durationDataArr.push(item.totalDuration);
+    })
+    setLabels2(labels2Arr);
+    setDurationData(durationDataArr);
+    });
+    
+  }, []);
+
+  if (!labels1) return 'Loading...';
+  if (!labels2) return 'Loading...';
+  if (!durationData) return 'Loading...';
+  if (!totalCustomerData) return 'Loading...';
 
   return (
     <>
@@ -82,7 +122,7 @@ const Branch = () => {
       <CChartLine
         style={{ height: '200px', marginTop: '20px' }}
         data={{
-          labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+          labels: labels1,
           datasets: [
             {
               label: 'My Second dataset',
@@ -90,15 +130,7 @@ const Branch = () => {
               borderColor: getStyle('--cui-dark'),
               pointHoverBackgroundColor: getStyle('--cui-dark'),
               borderWidth: 1,
-              data: [
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-              ],
+              data: totalCustomerData,
             },
           ],
         }}
@@ -167,7 +199,8 @@ const Branch = () => {
       <CChartLine
         style={{ height: '200px', marginTop: '20px' }}
         data={{
-          labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+          // labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+          labels: labels2,
           datasets: [
             {
               label: 'Rata-rata Durasi (menit)',
@@ -175,15 +208,7 @@ const Branch = () => {
               borderColor: getStyle('--cui-dark'),
               pointHoverBackgroundColor: getStyle('--cui-dark'),
               borderWidth: 1,
-              data: [
-                random(15, 150),
-                random(15, 150),
-                random(15, 150),
-                random(15, 150),
-                random(15, 150),
-                random(15, 150),
-                random(15, 150),
-              ],
+              data: durationData,
             },
           ],
         }}
