@@ -1,8 +1,13 @@
-const e = require('express');
+// const e = require('express');
 var express = require('express');
 // const { GetTableName } = require('../../AzureFunctionApp3/SharedModules/AzureTableStorageFuncV2');
 var router = express.Router();
 var AzureFunction = require('../shared_modules/AzureTableStorageFuncWebsite');
+
+const crypto = require('crypto');
+const bodyParser = require("body-parser");
+const app = express();
+app.use(bodyParser.urlencoded({extended: true}));
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -14,21 +19,31 @@ router.get('/test', async function(req, res, next) {
   res.send(`{"body":${JSON.stringify(data)}}`);
 });
 
-router.get('/CheckUsernameExist', async function(req, res, next) {
+router.post('/CheckUsernameExist', async function(req, res, next) {
   // console.log(req.body);
   // let userData = { username: "isrosyaeful", password: "password123456" };
   userData = req.body;
+  console.log(userData);
   let data = await AzureFunction.CheckUsernameExist(userData,console);
   res.send(`{"body":${JSON.stringify(data)}}`);
 });
 
-router.get('/ValidateUserCredential', async function(req, res, next) {
-  let userData = { username: "isrosyaeful", password: "password123456" };
+const getHashedPassword = (password) => {
+  const sha256 = crypto.createHash('sha256');
+  const hash = sha256.update(password).digest('base64');
+  return hash;
+}
+
+router.post('/ValidateUserCredential', async function(req, res, next) {
+  // let userData = { username: "isrosyaeful", password: "password123456" };
+  const userData = req.body;
+  const hashedPassword = getHashedPassword(userData.password);
+  userData.password = hashedPassword;
   let data = await AzureFunction.ValidateUserCredential(userData,console);
   res.send(`{"body":${JSON.stringify(data)}}`);
 });
 
-router.get('/InsertNewUser', async function(req, res, next) {
+router.post('/InsertNewUser', async function(req, res, next) {
   // format req.body 
   // {
   //   username: "isrosyaeful2",
@@ -36,8 +51,14 @@ router.get('/InsertNewUser', async function(req, res, next) {
   //   fullName: "Isro Syaeful Iman 2",
   //   role: "Administrator",
   // };
+  
   let userData = {};
   userData = req.body;
+  console.log(userData);
+  const hashedPassword = getHashedPassword(userData.password);
+  userData.password = hashedPassword;
+  console.log(userData);
+  /** masukin enkripsi disini */
   let data = await AzureFunction.InsertNewUser(userData,console);
   res.send(`{"body":${JSON.stringify(data)}}`);
 });
