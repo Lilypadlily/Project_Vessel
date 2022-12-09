@@ -1,4 +1,4 @@
-import React from 'react'
+import {React, useState, useEffect} from 'react'
 import {
   CButton,
   CCard,
@@ -14,7 +14,39 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
 
+import axios from "axios";
 const Register = () => {
+  const [userData, setUserData] = useState({
+    username: "",
+    fullName: "",
+    password: "",
+  })
+
+  const handleChange = (event) => {
+    const {name, value} = event.target;
+    // setUserData[name] = event.target.value;
+    setUserData((prev) => {
+      return {
+        ...prev,
+        [name]: value
+      }
+    })
+    //  console.log(userData);
+  }
+
+  const handleSubmit = () => {
+      const InputUserData = async (userData) => {
+          const res = await axios.post("http://localhost:3000/api/InsertNewUser", userData);
+      }
+      InputUserData(userData);
+      console.log("User inputted");
+      setUserData({
+        username: "",
+        fullName: "",
+        password: "",
+      })
+  }
+
   return (
     <div className="bg-light min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
@@ -29,11 +61,11 @@ const Register = () => {
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
-                    <CFormInput placeholder="Nama" autoComplete="username" />
+                    <CFormInput placeholder="Nama" autoComplete="username" name="fullName" value={userData.fullName} onChange={handleChange}/>
                   </CInputGroup>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>@</CInputGroupText>
-                    <CFormInput placeholder="Email" autoComplete="email" />
+                    <CFormInput placeholder="Email" autoComplete="email" name="username" value={userData.username} onChange={handleChange}/>
                   </CInputGroup>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>
@@ -43,6 +75,7 @@ const Register = () => {
                       type="password"
                       placeholder="Password"
                       autoComplete="new-password"
+                      name="password" value={userData.password} onChange={handleChange}
                     />
                   </CInputGroup>
                   <CInputGroup className="mb-4">
@@ -56,7 +89,7 @@ const Register = () => {
                     />
                   </CInputGroup>
                   <div className="d-grid">
-                    <CButton color="dark">Daftar</CButton>
+                    <CButton color="dark" onClick={handleSubmit}>Daftar</CButton>
                   </div>
                 </CForm>
               </CCardBody>
